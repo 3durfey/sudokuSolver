@@ -39,13 +39,13 @@ public:
         if (this->solve())
         {
             fillSemiCompleted();
-            printToTxt(origional, "semi completed sudoku: ");
-            printToTxt(sudoku, "completed sudoku: ");
+            printToTx(sudoku, "completed sudoku: ");
+            printToTx(origional, "partially completed sudoku: ");
         }
         else
             cout << "Unsolvable" << endl;
     }
-    void printToTxt(int array[9][9], string title)
+    void printToTx(int array[9][9], string title)
     {
         fstream myfile;
         myfile.open("sudoku.txt", fstream::app);
@@ -58,8 +58,8 @@ public:
                 for (int column = 0; column < 9; column++)
                 {
                     if (array[row][column] == 0)
-                        myfile << " |"
-                               << "  ";
+                        myfile << " | "
+                               << " ";
                     else
                         myfile << " | " << array[row][column];
                 }
@@ -103,14 +103,36 @@ public:
 
     bool solve()
     {
+        srand(time(NULL));
         int row, column;
+        int y = 0;
+        int arr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        while (y <= 8)
+        {
+            bool b = false;
+            int num = rand() % 9 + 1;
+            for (int x = 0; x < 10; x++)
+            {
+                if (arr[x] == num)
+                {
+                    b = true;
+                }
+            }
+            if (b != true)
+            {
+                arr[y] = num;
+                y++;
+            }
+            b = false;
+        }
+        cout << "end" << endl;
         if (!findEmptyLocation(&row, &column))
             return true;
-        for (int num = 1; num <= 9; num++)
+        for (int x = 0; x < 10; x++)
         {
-            if (checkValidity(column, row, num))
+            if (checkValidity(column, row, arr[x]))
             {
-                sudoku[row][column] = num;
+                sudoku[row][column] = arr[x];
                 if (solve())
                     return true;
                 sudoku[row][column] = 0;
@@ -138,41 +160,36 @@ public:
 
 int main()
 {
-    int sudokuContainer[9][9];
-    // functions for getting input from user for specific sudoku, bypassed since it would be a long process to input every input. Functions take user input and put into queue, then into two dimensional array.
-    int temp;
-    queue<int> q;
-    for (int x = 1; x <= 81; x++)
+
+    int sudokuContainer[9][9] = {{3, 0, 6, 5, 0, 8, 4, 0, 0},
+                                 {5, 2, 0, 0, 0, 0, 0, 0, 0},
+                                 {0, 8, 7, 0, 0, 0, 0, 3, 1},
+                                 {0, 0, 3, 0, 1, 0, 0, 8, 0},
+                                 {9, 0, 0, 8, 6, 3, 0, 0, 5},
+                                 {0, 5, 0, 0, 9, 0, 6, 0, 0},
+                                 {1, 3, 0, 0, 0, 0, 2, 5, 0},
+                                 {0, 0, 0, 0, 0, 0, 0, 7, 4},
+                                 {0, 0, 5, 2, 0, 6, 3, 0, 0}};
+
+    for (int x = 0; x < 9; x++)
     {
-        cout << "Enter number for space " << x << " (or 0 if empty): ";
-        cin >> temp;
-        q.push(temp);
-    }
-    while (!q.empty())
-    {
-        for (int x = 0; x < 9; x++)
+        for (int y = 0; y < 9; y++)
         {
-            for (int y = 0; y < 9; y++)
-            {
-                sudokuContainer[x][y] = q.front();
-                q.pop();
-            }
+            sudokuContainer[x][y] = 0;
         }
     }
-    /*
-    int sudokuContainer[9][9] = {{3, 0, 6, 5, 0, 8, 4, 0, 0},
-                             {5, 2, 0, 0, 0, 0, 0, 0, 0},
-                             {0, 8, 7, 0, 0, 0, 0, 3, 1},
-                             {0, 0, 3, 0, 1, 0, 0, 8, 0},
-                             {9, 0, 0, 8, 6, 3, 0, 0, 5},
-                             {0, 5, 0, 0, 9, 0, 6, 0, 0},
-                             {1, 3, 0, 0, 0, 0, 2, 5, 0},
-                             {0, 0, 0, 0, 0, 0, 0, 7, 4},
-                             {0, 0, 5, 2, 0, 6, 3, 0, 0}};
-    */
-    int value;
-    cout << "Enter number of boxes you would like filled in: ";
-    cin >> value;
-    Sudoku sudokuObject(sudokuContainer, value);
+    Sudoku sudokuObject(sudokuContainer, 60);
     sudokuObject.start();
+    /*
+    auto it = setOfNums.begin();
+    for (int x = 0; x < setOfNums.size(); x++, it++)
+    {
+        cout << *it << "  " << x << endl;
+    }
+    for (auto f : setOfNums)
+    {
+        cout << f << "  " << x << endl;
+        x++;
+    }
+    */
 }
