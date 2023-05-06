@@ -1,1 +1,1 @@
-result
+emptyPositions.size()

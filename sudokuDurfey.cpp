@@ -1,208 +1,161 @@
 #include <iostream>
-#include <queue>
 #include <map>
+#include <queue>
+#include <vector>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <set>
 using namespace std;
-void printSudoku();
 
-int sudokuContainer[9][9] = {
-    {0, 0, 0, 1, 0, 0, 8, 5, 0},
-    {5, 3, 6, 2, 8, 7, 9, 4, 1},
-    {0, 7, 1, 9, 0, 0, 0, 0, 0},
-    {0, 2, 7, 0, 1, 0, 4, 6, 5},
-    {0, 5, 4, 0, 2, 0, 0, 9, 8},
-    {6, 0, 0, 0, 4, 5, 1, 2, 3},
-    {2, 6, 0, 4, 7, 0, 3, 8, 0},
-    {0, 8, 0, 6, 3, 2, 5, 1, 4},
-    {0, 1, 3, 5, 9, 0, 0, 0, 0},
-};
-/* {9, 4, 2, 1, 6, 3, 8, 5, 7},
-   {5, 3, 6, 2, 8, 7, 9, 4, 1},
-   {8, 7, 1, 9, 5, 4, 2, 3, 6},
-   {3, 2, 7, 8, 1, 9, 4, 6, 5},
-   {1, 5, 4, 3, 2, 6, 7, 9, 8},
-   {6, 9, 8, 7, 4, 5, 1, 2, 3},
-   {2, 6, 5, 4, 7, 1, 3, 8, 9},
-   {7, 8, 9, 6, 3, 2, 5, 1, 4},
-   {4, 1, 3, 5, 9, 8, 6, 7, 2},
-*/
-/*
-   942163857536287941871954236327819465154326798698745123265471389789632514413598672
-
-
-*/
-// function checks sudoku container for validity, returning false if not valid
-bool validityCheck()
+class Sudoku
 {
-    map<int, bool> map;
-    // for loop for starting each box
-    for (int x = 0; x < 9; x++)
-    {
-        for (int y = 1; y <= 9; y++)
-        {
-            map[y] = false;
-        }
-        int columnStart;
-        int columnEnd;
-        int rowStart;
-        int rowEnd;
-        if (x == 0 || x == 3 || x == 6)
-        {
-            columnStart = 0;
-            columnEnd = 3;
-        }
-        else if (x == 1 || x == 4 || x == 7)
-        {
-            columnStart = 3;
-            columnEnd = 6;
-        }
-        else
-        {
-            columnStart = 6;
-            columnEnd = 9;
-        }
-        if (x < 3)
-        {
-            rowStart = 0;
-            rowEnd = 3;
-        }
-        else if (x >= 3 && x < 6)
-        {
-            rowStart = 3;
-            rowEnd = 6;
-        }
-        else
-        {
-            rowStart = 6;
-            rowEnd = 9;
-        }
+private:
+    int sudoku[9][9];
+    int origional[9][9];
+    vector<int *> emptyPositions;
+    int numberToFill;
 
-        for (int row = rowStart; row < rowEnd; row++)
+public:
+    Sudoku(int sudoku[9][9], int numberToFill)
+    {
+        for (int x = 0; x < 9; x++)
         {
-            for (int column = columnStart; column < columnEnd; column++)
+            for (int y = 0; y < 9; y++)
             {
-                if (sudokuContainer[row][column] != 0)
+                this->sudoku[x][y] = sudoku[x][y];
+                this->origional[x][y] = sudoku[x][y];
+                if (sudoku[x][y] == 0)
                 {
-                    if (map[sudokuContainer[row][column]] == true)
-                    {
-                        return false;
-                    }
+                    int *arrayPosition = new int[2];
+                    arrayPosition[0] = x;
+                    arrayPosition[1] = y;
+                    this->emptyPositions.push_back(&arrayPosition[0]);
+                }
+            }
+        }
+        this->numberToFill = numberToFill;
+    }
+    void printAndSolve()
+    {
+        if (this->solve())
+        {
+            printSemiCompleted();
+            cout << "completed sudoku: " << endl;
+            cout << "--------------------------------------" << endl;
+            for (int row = 0; row < 9; row++)
+            {
+                for (int column = 0; column < 9; column++)
+                {
+                    if (sudoku[row][column] == 0)
+                        cout << " |"
+                             << "  ";
                     else
-                    {
-                        map[sudokuContainer[row][column]] = true;
-                    }
+                        cout << " | " << sudoku[row][column];
                 }
+                cout << " |" << endl;
+                cout << "--------------------------------------" << endl;
             }
         }
+        else
+            cout << "Unsolvable" << endl;
+    }
+    bool checkValidity(int column, int row, int num)
+    {
+        // check each row for value return false if found
+        for (int x = 0; x < 9; x++)
+            if (sudoku[x][column] == num)
+                return false;
+        // check each column for value return false if found
+        for (int y = 0; y < 9; y++)
+            if (sudoku[row][y] == num)
+                return false;
+        // check box for value return false if found
+        for (int x = 0; x < 3; x++)
+            for (int y = 0; y < 3; y++)
+                if (sudoku[x + (row - row % 3)][y + (column - column % 3)] == num)
+                    return false;
+        return true;
+    }
+    bool findEmptyLocation(int *row, int *column)
+    {
+        for (int x = 0; x < 9; x++)
+            for (int y = 0; y < 9; y++)
+                if (sudoku[x][y] == 0)
+                {
+                    *row = x;
+                    *column = y;
+                    return true;
+                }
+        return false;
     }
 
-    // check each row
-    for (int row = 0; row < 9; row++)
+    bool solve()
     {
-        for (int y = 1; y <= 9; y++)
+        int row, column;
+        if (!findEmptyLocation(&row, &column))
+            return true;
+        for (int num = 1; num <= 9; num++)
         {
-            map[y] = false;
-        }
-        for (int column = 0; column < 9; column++)
-        {
-            if (sudokuContainer[row][column] != 0)
+            if (checkValidity(column, row, num))
             {
-                if (map[sudokuContainer[row][column]] == true)
-                {
-                    return false;
-                }
+                sudoku[row][column] = num;
+                if (solve())
+                    return true;
+                sudoku[row][column] = 0;
+            }
+        }
+        return false;
+    }
+    void printSemiCompleted()
+    {
+        srand(time(NULL));
+        set<int> setOfNums;
+        while (setOfNums.size() < numberToFill)
+        {
+            int size = (emptyPositions.size() - 1);
+            int random = rand() % size;
+            setOfNums.insert(random);
+        }
+        auto it = setOfNums.begin();
+        for (int x = 0; x < numberToFill; x++, it++)
+        {
+            origional[*(emptyPositions[*it])][*(emptyPositions[*it] + 1)] = sudoku[*(emptyPositions[*it])][*(emptyPositions[*it] + 1)];
+        }
+        cout << "semi completed sudoku: " << endl;
+        cout << "--------------------------------------" << endl;
+        for (int row = 0; row < 9; row++)
+        {
+            for (int column = 0; column < 9; column++)
+            {
+                if (origional[row][column] == 0)
+                    cout << " |"
+                         << "  ";
                 else
-                {
-                    map[sudokuContainer[row][column]] = true;
-                }
+                    cout << " | " << origional[row][column];
             }
+            cout << " |" << endl;
+            cout << "--------------------------------------" << endl;
         }
     }
-    // check each column
-    for (int row = 0; row < 9; row++)
-    {
-        for (int y = 1; y <= 9; y++)
-        {
-            map[y] = false;
-        }
-        for (int column = 0; column < 9; column++)
-        {
-            if (sudokuContainer[column][row] != 0)
-            {
-                if (map[sudokuContainer[column][row]] == true)
-                {
-                    return false;
-                }
-                else
-                {
-                    map[sudokuContainer[column][row]] = true;
-                }
-            }
-        }
-    }
-    return true;
-}
-// function that attempts to fill out sudoku using recursion and backtracking. returns true if solved or false if not possible
-bool solveSudoku()
-{
-    for (int row = 0; row < 9; row++)
-    {
-        for (int column = 0; column < 9; column++)
-        {
-            if (sudokuContainer[row][column] == 0)
-            {
-                for (int x = 1; x < 10; x++)
-                {
-                    sudokuContainer[row][column] = x;
-                    cout << " row: " << row << " column: " << column << " value: " << x << endl;
-                    if (validityCheck())
-                    {
-                        printSudoku();
-                        int result = solveSudoku();
-                        if (!result)
-                        {
-                            x = 0;
-                        }
-                        else
-                        {
-                            cout << "valid" << endl;
-                            return true;
-                        }
-                    }
-                    else if (x == 9)
-                    {
-                        cout << "9 ended no match" << endl;
-                        sudokuContainer[column][row] = 0;
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-    return true;
-}
+};
 
-void printSudoku()
-{
-    for (int row = 0; row < 9; row++)
-    {
-        for (int column = 0; column < 9; column++)
-        {
-            cout << sudokuContainer[row][column];
-        }
-        cout << endl;
-    }
-    cout << endl;
-}
 int main()
 {
-    queue<int> q;
-    int temp;
-    cout << "Before solved: " << endl;
-    printSudoku();
-    solveSudoku();
-    cout << "Solved Sudoku: " << endl;
 
-    printSudoku();
+    int inputSudoku[9][9] = {{3, 0, 6, 5, 0, 8, 4, 0, 0},
+                             {5, 2, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 8, 7, 0, 0, 0, 0, 3, 1},
+                             {0, 0, 3, 0, 1, 0, 0, 8, 0},
+                             {9, 0, 0, 8, 6, 3, 0, 0, 5},
+                             {0, 5, 0, 0, 9, 0, 6, 0, 0},
+                             {1, 3, 0, 0, 0, 0, 2, 5, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 7, 4},
+                             {0, 0, 5, 2, 0, 6, 3, 0, 0}};
+
+    Sudoku sudokuObject(inputSudoku, 42);
+    sudokuObject.printAndSolve();
+
     // functions for getting input from user for specific sudoku, bypassed since it would be a long process to input every input. Functions take user input and put into queue, then into two dimensional array.
     /*
     for (int x = 1; x <= 81; x++)
