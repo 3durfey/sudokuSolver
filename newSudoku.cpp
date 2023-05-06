@@ -13,9 +13,10 @@ private:
     int origional[9][9];
     vector<int *> emptyPositions;
     int numberToFill;
+    int newOrEntered;
 
 public:
-    Sudoku(int sudoku[9][9], int numberToFill)
+    Sudoku(int sudoku[9][9], int numberToFill, int newOrEntered)
     {
         for (int x = 0; x < 9; x++)
         {
@@ -33,17 +34,33 @@ public:
             }
         }
         this->numberToFill = numberToFill;
+        this->newOrEntered = newOrEntered;
     }
     void start()
     {
-        if (this->solve())
+        // solve entered sudoku
+        if (this->newOrEntered == 1)
         {
-            fillSemiCompleted();
-            printToTx(sudoku, "completed sudoku: ");
-            printToTx(origional, "partially completed sudoku: ");
+            if (this->solveEnteredSudoku())
+            {
+                fillSemiCompleted();
+                printToTx(sudoku, "completed sudoku: ");
+                printToTx(origional, "partially completed sudoku: ");
+            }
+            else
+                cout << "Unsolvable" << endl;
         }
+        // create new sudoku
         else
-            cout << "Unsolvable" << endl;
+        {
+            if (this->newSudoku())
+            {
+                fillSemiCompleted();
+                printToTx(origional, "Generated sudoku: ");
+            }
+            else
+                cout << "Unsolvable" << endl;
+        }
     }
     void printToTx(int array[9][9], string title)
     {
@@ -100,8 +117,24 @@ public:
                 }
         return false;
     }
-
-    bool solve()
+    bool solveEnteredSudoku()
+    {
+        int row, column;
+        if (!findEmptyLocation(&row, &column))
+            return true;
+        for (int num = 1; num <= 9; num++)
+        {
+            if (checkValidity(column, row, num))
+            {
+                sudoku[row][column] = num;
+                if (solveEnteredSudoku())
+                    return true;
+                sudoku[row][column] = 0;
+            }
+        }
+        return false;
+    }
+    bool newSudoku()
     {
         srand(time(NULL));
         int row, column;
@@ -125,7 +158,6 @@ public:
             }
             b = false;
         }
-        cout << "end" << endl;
         if (!findEmptyLocation(&row, &column))
             return true;
         for (int x = 0; x < 10; x++)
@@ -133,13 +165,14 @@ public:
             if (checkValidity(column, row, arr[x]))
             {
                 sudoku[row][column] = arr[x];
-                if (solve())
+                if (newSudoku())
                     return true;
                 sudoku[row][column] = 0;
             }
         }
         return false;
     }
+
     void fillSemiCompleted()
     {
         srand(time(NULL));
@@ -170,26 +203,45 @@ int main()
                                  {1, 3, 0, 0, 0, 0, 2, 5, 0},
                                  {0, 0, 0, 0, 0, 0, 0, 7, 4},
                                  {0, 0, 5, 2, 0, 6, 3, 0, 0}};
-
-    for (int x = 0; x < 9; x++)
+    int choice;
+    cout << "enter 1 to enter sudoku to solve or 2 to generate new sudoku: ";
+    cin >> choice;
+    if (choice == 2)
     {
-        for (int y = 0; y < 9; y++)
+        for (int x = 0; x < 9; x++)
         {
-            sudokuContainer[x][y] = 0;
+            for (int y = 0; y < 9; y++)
+            {
+                sudokuContainer[x][y] = 0;
+            }
         }
     }
-    Sudoku sudokuObject(sudokuContainer, 60);
+    else
+    {
+        int temp;
+        queue<int> q;
+        for (int x = 1; x <= 81; x++)
+        {
+            cout << "Enter number for space " << x << " (or 0 if empty): ";
+            cin >> temp;
+            q.push(temp);
+        }
+        while (!q.empty())
+        {
+            for (int x = 0; x < 9; x++)
+            {
+                for (int y = 0; y < 9; y++)
+                {
+                    sudokuContainer[x][y] = q.front();
+                    q.pop();
+                }
+            }
+        }
+    }
+    int value;
+    cout << "Enter number of boxes you would like filled in: ";
+    cin >> value;
+
+    Sudoku sudokuObject(sudokuContainer, 60, choice);
     sudokuObject.start();
-    /*
-    auto it = setOfNums.begin();
-    for (int x = 0; x < setOfNums.size(); x++, it++)
-    {
-        cout << *it << "  " << x << endl;
-    }
-    for (auto f : setOfNums)
-    {
-        cout << f << "  " << x << endl;
-        x++;
-    }
-    */
 }
