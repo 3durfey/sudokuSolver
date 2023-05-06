@@ -1,11 +1,9 @@
 #include <iostream>
-#include <map>
 #include <queue>
 #include <vector>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <set>
+#include <fstream>
+
 using namespace std;
 
 class Sudoku
@@ -36,29 +34,42 @@ public:
         }
         this->numberToFill = numberToFill;
     }
-    void printAndSolve()
+    void start()
     {
         if (this->solve())
         {
-            printSemiCompleted();
-            cout << "completed sudoku: " << endl;
-            cout << "--------------------------------------" << endl;
+            fillSemiCompleted();
+            printToTxt(origional, "semi completed sudoku: ");
+            printToTxt(sudoku, "completed sudoku: ");
+        }
+        else
+            cout << "Unsolvable" << endl;
+    }
+    void printToTxt(int array[9][9], string title)
+    {
+        fstream myfile;
+        myfile.open("sudoku.txt", fstream::app);
+        if (myfile.is_open())
+        {
+            myfile << title << endl;
+            myfile << "--------------------------------------" << endl;
             for (int row = 0; row < 9; row++)
             {
                 for (int column = 0; column < 9; column++)
                 {
-                    if (sudoku[row][column] == 0)
-                        cout << " |"
-                             << "  ";
+                    if (array[row][column] == 0)
+                        myfile << " |"
+                               << "  ";
                     else
-                        cout << " | " << sudoku[row][column];
+                        myfile << " | " << array[row][column];
                 }
-                cout << " |" << endl;
-                cout << "--------------------------------------" << endl;
+                myfile << " |" << endl;
+                myfile << "--------------------------------------" << endl;
             }
+            myfile.close();
         }
         else
-            cout << "Unsolvable" << endl;
+            cout << "Unable to open file";
     }
     bool checkValidity(int column, int row, int num)
     {
@@ -107,7 +118,7 @@ public:
         }
         return false;
     }
-    void printSemiCompleted()
+    void fillSemiCompleted()
     {
         srand(time(NULL));
         set<int> setOfNums;
@@ -121,21 +132,6 @@ public:
         for (int x = 0; x < numberToFill; x++, it++)
         {
             origional[*(emptyPositions[*it])][*(emptyPositions[*it] + 1)] = sudoku[*(emptyPositions[*it])][*(emptyPositions[*it] + 1)];
-        }
-        cout << "semi completed sudoku: " << endl;
-        cout << "--------------------------------------" << endl;
-        for (int row = 0; row < 9; row++)
-        {
-            for (int column = 0; column < 9; column++)
-            {
-                if (origional[row][column] == 0)
-                    cout << " |"
-                         << "  ";
-                else
-                    cout << " | " << origional[row][column];
-            }
-            cout << " |" << endl;
-            cout << "--------------------------------------" << endl;
         }
     }
 };
@@ -152,9 +148,11 @@ int main()
                              {1, 3, 0, 0, 0, 0, 2, 5, 0},
                              {0, 0, 0, 0, 0, 0, 0, 7, 4},
                              {0, 0, 5, 2, 0, 6, 3, 0, 0}};
-
-    Sudoku sudokuObject(inputSudoku, 42);
-    sudokuObject.printAndSolve();
+    int value;
+    cout << "Enter number of boxes you would like filled in: ";
+    cin >> value;
+    Sudoku sudokuObject(inputSudoku, value);
+    sudokuObject.start();
 
     // functions for getting input from user for specific sudoku, bypassed since it would be a long process to input every input. Functions take user input and put into queue, then into two dimensional array.
     /*
